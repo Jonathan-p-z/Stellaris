@@ -109,9 +109,9 @@ fn main() {
     let (mut rl, thread) = raylib::init()
         .size(1280, 720)
         .title("Stellaris")
+        .vsync()
         .build();
 
-    rl.set_target_fps(60);
     rl.disable_cursor();
 
     // 3 galaxies avec inclinaison et biais spectral différents
