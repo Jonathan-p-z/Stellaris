@@ -3,13 +3,13 @@
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
 Simulateur galactique navigable en temps réel, généré procéduralement en Rust/raylib.  
-Développé en solo pour une game jam — thème : simulation d'étoiles et de galaxies.
+Développé en solo pour une game jam / thème : simulation d'étoiles et de galaxies.
 
 ![screenshot](assets/README.png)
 
 ## À propos
 
-Stellaris génère procéduralement trois galaxies spirales navigables en temps réel. Chaque galaxie est construite à partir de bras logarithmiques perturbés par du bruit de Perlin, avec un noyau dense O/B et une distribution spectrale IMF réaliste. L'espace intergalactique est peuplé d'événements dynamiques — supernovae, pulsars, quasars, étoiles filantes — qui s'animent en continu.
+Stellaris génère procéduralement trois galaxies spirales navigables en temps réel. Chaque galaxie est construite à partir de bras logarithmiques perturbés par du bruit de Perlin, avec un noyau dense O/B et une distribution spectrale IMF réaliste. L'espace intergalactique est peuplé d'événements dynamiques supernovae, pulsars, quasars, étoiles filantes qui s'animent en continu.
 
 Le rendu repose entièrement sur le CPU : aucun GPU dédié requis. Un système de LOD dynamique maintient 60 FPS stables en combinant billboards texturés pour les objets proches et draw_point3D pour les objets lointains. Un bloom software multi-couches est appliqué sur chaque étoile pour simuler la diffusion lumineuse.
 
