@@ -1,0 +1,20 @@
+# Rust
+/target/
+
+# Assets générés au runtime — pas dans le repo
+assets/star_halo.png
+assets/nebula_cloud.png
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Binaires
+*.exe
+*.out
