@@ -53,7 +53,7 @@ impl Cam {
 
         // orientation souris curseur capturé (disable_cursor), delta direct
         let delta = rl.get_mouse_delta();
-        self.yaw   += delta.x * SENSIBILITE;
+        self.yaw   -= delta.x * SENSIBILITE;
         self.pitch  -= delta.y * SENSIBILITE;
         self.pitch   = self.pitch.clamp(-PITCH_MAX, PITCH_MAX);
 

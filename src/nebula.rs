@@ -4,9 +4,9 @@ use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 use raylib::prelude::*;
 
+#[allow(dead_code)]
 pub struct Nebula {
     pub couleur: Color,
-    pub seed: u64,
     pub nuages: Vec<(Vector3, f32, Color)>,
 }
 
@@ -41,6 +41,6 @@ impl Nebula {
             nuages.push((Vector3::new(bx, by, bz), taille, col));
         }
 
-        Nebula { couleur, seed, nuages }
+        Nebula { couleur, nuages }
     }
 }

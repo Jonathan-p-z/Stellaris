@@ -24,6 +24,7 @@ impl StarType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn size(&self) -> f32 {
         match self {
             StarType::O => 14.0,
@@ -65,6 +66,5 @@ impl StarType {
 pub struct Star {
     pub pos: Vector3,
     pub star_type: StarType,
-    pub taille: f32,
     pub luminosite: f32, // 0.0 - 1.0
 }
