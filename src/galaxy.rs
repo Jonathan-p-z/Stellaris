@@ -7,6 +7,7 @@ use raylib::prelude::*;
 
 use crate::star::{Star, StarType};
 
+#[allow(dead_code)]
 pub struct Galaxy {
     pub centre: Vector3,
     pub rayon: f32,
@@ -30,7 +31,7 @@ impl Galaxy {
         for _ in 0..nb_bulge {
             let r = rng.gen::<f32>().powf(2.0) * rayon * 0.18;
             let theta = rng.gen::<f32>() * TAU;
-            let phi = rng.gen::<f32>() * TAU;
+            let phi = (rng.gen::<f32>() * 2.0 - 1.0).acos();
             let x = centre.x + r * theta.cos();
             let z = centre.z + r * theta.sin();
             let y = centre.y + r * 0.3 * phi.sin();
@@ -39,9 +40,8 @@ impl Galaxy {
             let roll_b = rng.gen::<f32>() * 0.004;
             let star_type = StarType::from_roll(roll_b);
             let luminosite = rng.gen_range(0.5f32..1.0);
-            let taille = star_type.size() * rng.gen_range(0.8f32..1.5);
 
-            etoiles.push(Star { pos: Vector3::new(x, y, z), star_type, taille, luminosite });
+            etoiles.push(Star { pos: Vector3::new(x, y, z), star_type, luminosite });
         }
 
         // bras spiraux
@@ -69,9 +69,8 @@ impl Galaxy {
             let roll_b = biaiser(rng.gen::<f32>(), biais);
             let star_type = StarType::from_roll(roll_b);
             let luminosite = rng.gen_range(0.35f32..1.0);
-            let taille = star_type.size() * rng.gen_range(0.7f32..1.4);
 
-            etoiles.push(Star { pos: Vector3::new(x, y, z), star_type, taille, luminosite });
+            etoiles.push(Star { pos: Vector3::new(x, y, z), star_type, luminosite });
         }
 
         // appliquer l'inclinaison, rotation sur X autour du centre de la galaxie
