@@ -11,13 +11,23 @@ pub fn draw_stars(
     tex: &Texture2D,
     cam: Camera3D,
     trous_noirs: &[BlackHole],
-    centre_galaxie: Vector3,
+    _centre_galaxie: Vector3,
+    seuil_culling: f32,
+    seuil_billboard: f32,
 ) {
     let up = cam.up;
     let origin = Vector2::new(0.0, 0.0);
     let src = Rectangle { x: 0.0, y: 0.0, width: 64.0, height: 64.0 };
 
+    let cam_pos = cam.position;
+
     for star in stars {
+        let dx = star.pos.x - cam_pos.x;
+        let dy = star.pos.y - cam_pos.y;
+        let dz = star.pos.z - cam_pos.z;
+        let dist_sq = dx*dx + dy*dy + dz*dz;
+        if dist_sq > seuil_culling * seuil_culling { continue; }
+
         let base = star.star_type.color();
         let lum = star.luminosite;
         let mut r = (base.r as f32 * lum) as u8;
@@ -27,10 +37,10 @@ pub fn draw_stars(
         // lensing + grossissement noyau galactique
         let mut size_mult = 1.0f32;
         for bh in trous_noirs {
-            let dx = star.pos.x - bh.pos.x;
-            let dy = star.pos.y - bh.pos.y;
-            let dz = star.pos.z - bh.pos.z;
-            let dist = (dx*dx + dy*dy + dz*dz).sqrt();
+            let bh_dx = star.pos.x - bh.pos.x;
+            let bh_dy = star.pos.y - bh.pos.y;
+            let bh_dz = star.pos.z - bh.pos.z;
+            let dist = (bh_dx*bh_dx + bh_dy*bh_dy + bh_dz*bh_dz).sqrt();
             if dist < 3.0       { size_mult = 9.0; } // noyau dense — min 2.5u pour O/B
             else if dist < 5.0  { size_mult = 1.8; }
             let rayon_effet = bh.rayon_influence * 3.0;
@@ -44,15 +54,10 @@ pub fn draw_stars(
 
         let col = Color::new(r, g, b, 255);
 
-        let dx = star.pos.x - cam.position.x;
-        let dy = star.pos.y - cam.position.y;
-        let dz = star.pos.z - cam.position.z;
-        let dist_sq_cam = dx*dx + dy*dy + dz*dz;
-
-        if dist_sq_cam >= 200.0 * 200.0 {
+        if dist_sq >= seuil_billboard * seuil_billboard {
             d.draw_point3D(star.pos, col);
         } else {
-            let dist_cam = dist_sq_cam.sqrt();
+            let dist_cam = dist_sq.sqrt();
             let s;
             if dist_cam < 15.0 {
                 s = (star.star_type.billboard_size() * size_mult * 2.5).min(3.5);
@@ -67,45 +72,25 @@ pub fn draw_stars(
                 s = (star.star_type.billboard_size() * size_mult * 1.5).min(2.5);
                 d.draw_billboard_pro(cam, *tex.as_ref(), src, star.pos, up, Vector2::new(s, s), origin, 0.0, col);
             } else {
-                let fade = if dist_cam > 160.0 { 1.0 - (dist_cam - 160.0) / 40.0 } else { 1.0 };
+                // fade progressif sur les 25% finaux du seuil billboard pour éviter le pop brusque
+                let fade_debut = seuil_billboard * 0.75;
+                let fade = if dist_cam > fade_debut {
+                    (1.0 - (dist_cam - fade_debut) / (seuil_billboard - fade_debut)).max(0.0)
+                } else {
+                    1.0
+                };
                 s = star.star_type.billboard_size() * size_mult * fade.max(0.05);
                 d.draw_billboard_pro(cam, *tex.as_ref(), src, star.pos, up, Vector2::new(s, s), origin, 0.0, col);
             }
 
-            // pas de bloom dans le noyau dense
-            let dx_c = star.pos.x - centre_galaxie.x;
-            let dy_c = star.pos.y - centre_galaxie.y;
-            let dz_c = star.pos.z - centre_galaxie.z;
-            let dist_centre = (dx_c*dx_c + dy_c*dy_c + dz_c*dz_c).sqrt();
-            let faire_bloom = dist_centre > 8.0;
-
-            if faire_bloom {
-                // halo bloom 1
-                let col_halo1 = Color::new(
-                    (col.r as f32 * 0.35) as u8,
-                    (col.g as f32 * 0.35) as u8,
-                    (col.b as f32 * 0.35) as u8,
-                    255,
-                );
-                d.draw_billboard_pro(cam, *tex.as_ref(), src, star.pos, cam.up, Vector2::new(s * 2.5, s * 2.5), origin, 0.0, col_halo1);
-
-                // halo bloom 2
-                let col_halo2 = Color::new(
-                    (col.r as f32 * 0.12) as u8,
-                    (col.g as f32 * 0.12) as u8,
-                    (col.b as f32 * 0.12) as u8,
-                    255,
-                );
-                d.draw_billboard_pro(cam, *tex.as_ref(), src, star.pos, cam.up, Vector2::new(s * 5.0, s * 5.0), origin, 0.0, col_halo2);
-            }
         }
     }
 }
 
 // nébuleuse en blend alpha, draw_billboard simple, toujours face caméra
 pub fn draw_nebula(neb: &Nebula, d: &mut impl RaylibDraw3D, tex: &Texture2D, cam: Camera3D) {
-    for (pos, taille, _col) in &neb.nuages {
-        d.draw_billboard(cam, tex, *pos, *taille * 0.4, neb.couleur);
+    for (pos, taille, col) in &neb.nuages {
+        d.draw_billboard(cam, tex, *pos, *taille * 0.4, *col);
     }
 }
 
@@ -133,6 +118,10 @@ pub fn draw_events(events: &[Event], d: &mut impl RaylibDraw3D, tex: &Texture2D,
                     Vector2::new(2.5, 2.5), origin, 0.0, Color::new(180, 220, 255, a as u8));
             }
             EventType::AmasGlobulaire => {
+                let dx = ev.pos.x - cam.position.x;
+                let dy = ev.pos.y - cam.position.y;
+                let dz = ev.pos.z - cam.position.z;
+                if dx*dx + dy*dy + dz*dz > 450.0 * 450.0 { continue; }
                 for pos in &ev.membres {
                     d.draw_point3D(*pos, Color::new(255, 240, 200, 255));
                 }
